@@ -1,0 +1,12 @@
+.sidebar {
+    width: 200px;
+}
+
+.sidebar-list {
+    list-style-type: none;
+}
+
+.sidebar-item {
+    padding-top: 40px;
+}
+
