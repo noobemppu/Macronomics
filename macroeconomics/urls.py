@@ -21,4 +21,6 @@ from app import views  # Update this line
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.main_page, name='main_page'),
+    path('imf-data/', views.imf_data, name='imf_data'),
+    path('world-bank-data/', views.world_bank_data, name='world_bank_data'),
 ]

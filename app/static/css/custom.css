@@ -10,3 +10,15 @@
     padding-top: 40px;
 }
 
+.main-content {
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+
+.graph {
+    width: 50%;
+}
+
+
