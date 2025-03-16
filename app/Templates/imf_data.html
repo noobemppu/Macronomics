@@ -1,0 +1,147 @@
+{% extends 'main_page.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center min-vh-100">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="display-4 text-center">IMF Data</h1>
+                <p class="text-center">IMF data is provided by the International Monetary Fund. The IMF provides data on the economic and financial conditions of its member countries. You can query the data you need from here.</p>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h2 class="h2 text-center">Search for data</h2>
+                <form method="post" class="form-horizontal">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{ form.country_code.label_tag }}
+                        {{ form.country_code }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.indicator_code.label_tag }}
+                        {{ form.indicator_code }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.frequency.label_tag }}
+                        {{ form.frequency }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.start_date.label_tag }}
+                        {{ form.start_date }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.end_date.label_tag }}
+                        {{ form.end_date }}
+                    </div>
+                    <div class="form-group text-center">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </form>
+                <!-- Add this to your imf_data.html template where you want the export options -->
+                {% if graph %}
+                <div class="dropdown mt-3">
+                <button class="btn btn-success dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Export Data
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                    <li>
+                        <!-- Export data to csv file -->
+                        <form method="post" action="{% url 'export_imf_data_csv' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="country_code" value="{{ form.cleaned_data.country_code }}">
+                            <input type="hidden" name="indicator_code" value="{{ form.cleaned_data.indicator_code }}">
+                            <input type="hidden" name="frequency" value="{{ form.cleaned_data.frequency }}">
+                            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
+                            <input type="hidden" name="end_date" value="{{ form.cleaned_data.end_date|date:'Y-m-d' }}">
+                            <button type="submit" class="dropdown-item">Export to CSV</button>
+                        </form>
+                    </li>
+                    <li>
+                        <!-- Export data to Excel file -->
+                        <form method="post" action="{% url 'export_imf_data_excel' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="country_code" value="{{ form.cleaned_data.country_code }}">
+                            <input type="hidden" name="indicator_code" value="{{ form.cleaned_data.indicator_code }}">
+                            <input type="hidden" name="frequency" value="{{ form.cleaned_data.frequency }}">
+                            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
+                            <input type="hidden" name="end_date" value="{{ form.cleaned_data.end_date|date:'Y-m-d' }}">
+                            <button type="submit" class="dropdown-item">Export to Excel</button>
+                        </form>
+                    </li>
+                    <li>
+                        <!-- Export data to a PNG/JPEG image -->
+                        <form method="post" action="{% url 'export_imf_data_image' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="country_code" value="{{ form.cleaned_data.country_code }}">
+                            <input type="hidden" name="indicator_code" value="{{ form.cleaned_data.indicator_code }}">
+                            <input type="hidden" name="frequency" value="{{ form.cleaned_data.frequency }}">
+                            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
+                            <input type="hidden" name="end_date" value="{{ form.cleaned_data.end_date|date:'Y-m-d' }}">
+                            <button type="submit" class="dropdown-item">Export Graph as Image</button>
+                        </form>
+                    </li>
+                    <li>
+                        <!-- Export data to PDF file -->
+                        <form method="post" action="{% url 'export_imf_data_pdf' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="country_code" value="{{ form.cleaned_data.country_code }}">
+                            <input type="hidden" name="indicator_code" value="{{ form.cleaned_data.indicator_code }}">
+                            <input type="hidden" name="frequency" value="{{ form.cleaned_data.frequency }}">
+                            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
+                            <input type="hidden" name="end_date" value="{{ form.cleaned_data.end_date|date:'Y-m-d' }}">
+                            <button type="submit" class="dropdown-item">Export as PDF Report</button>
+                        </form>
+                    </li>
+                </ul>
+                </div>
+                {% endif %}
+                {% if error_message %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error_message }}
+                    </div>
+                {% endif %}
+                {% if graph %}
+                    <div class="graph">
+                        {{ graph|safe }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const countrySearchInput = document.getElementById('country_search');
+        const countrySelect = document.getElementById('country_code');
+        const indicatorSearchInput = document.getElementById('indicator_search');
+        const indicatorSelect = document.getElementById('indicator_code');
+    
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        function filterOptions(input, select) {
+            const filter = input.value.toLowerCase();
+            const options = select.options;
+            for (let i = 0; i < options.length; i++) {
+                const option = options[i];
+                const text = option.text.toLowerCase();
+                option.style.display = text.includes(filter) ? '' : 'none';
+            }
+        }
+    
+        countrySearchInput.addEventListener('input', function() {
+            filterOptions(countrySearchInput, countrySelect);
+        });
+    
+        indicatorSearchInput.addEventListener('input', function() {
+            filterOptions(indicatorSearchInput, indicatorSelect);
+        });
+    });
+</script>
+{% endblock %}

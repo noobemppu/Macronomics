@@ -23,4 +23,10 @@ urlpatterns = [
     path('', views.main_page, name='main_page'),
     path('imf-data/', views.imf_data, name='imf_data'),
     path('world-bank-data/', views.world_bank_data, name='world_bank_data'),
+    path('export-imf-data-csv/', views.export_imf_data_csv, name='export_imf_data_csv'),
+    path('export-imf-data-excel/', views.export_imf_data_excel, name='export_imf_data_excel'),
+    path('export-imf-data-image/', views.export_imf_data_image, name='export_imf_data_image'),
+    path('export-imf-data-pdf/', views.export_imf_data_pdf, name='export_imf_data_pdf'),
+
+    path('debug-imf-api/', views.debug_imf_api, name='debug_imf_api'),
 ]
