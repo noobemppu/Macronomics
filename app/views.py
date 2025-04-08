@@ -7,14 +7,15 @@ import os
 
 # Third-party imports
 import pandas as pd
-import pandasdmx as sdmx
-import plotly.express as px
+import datacommons as dc
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.linecharts import HorizontalLineChart
+import plotly.express as px
+import plotly.graph_objects as go
 
 # Django imports
 from django.shortcuts import render
@@ -22,7 +23,7 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 
 # Local application imports
-from .models import IMFData, IMFDataForm
+from .models import DataCommonsData, DataCommonsDataForm, get_indicators #search_indicators 
 from .cache_config import cache_manager  # This might be needed for your debug_imf_api view
 
 def main_page(request):
@@ -33,83 +34,125 @@ def main_page(request):
     return render(request, 'main_page.html')
 
 
-def imf_data(request):
+def datacommons_data(request):
     """
     View for displaying IMF data query form and results.
     Handles both GET requests (show empty form) and POST requests (process form and show results).
     """
+    print(f"Request method: {request.method}, is AJAX: {request.headers.get('X-Requested-With') == 'XMLHttpRequest'}")
+    print(f"POST data: {request.POST}")
     # Initialize variables that will be passed to the template
     error_message = None  # Stores error messages if any
     graph = None          # Stores the generated graph HTML if successful
     
-    # Handle form submission (POST request)
-    if request.method == 'POST':
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    if request.method == 'POST' and is_ajax:
+        action = request.POST.get('action', '')
+        country_code = request.POST.get('country_code', '')
+
+        if action == 'get_indicators':
+            category = request.POST.get('indicator_category', '') 
+
+            try:
+                indicators = get_indicators(country_code, category)
+                return JsonResponse({
+                    'success': True,
+                    'indicators': indicators
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                })
+            
+        """elif action == 'search_data_commons':
+            search_term = request.POST.get('search_term', '')
+            try:
+                indicators = search_indicators(search_term)
+
+                return JsonResponse({
+                    'success': True,
+                    'indicators': indicators
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                })
+                """
+
+    if request.method == 'POST' and not is_ajax:
         # Create a form instance with the submitted data
-        form = IMFDataForm(request.POST)
+        form = DataCommonsDataForm(request.POST)
         
         # Validate the form data
         if form.is_valid():
             # Extract all the form fields
-            country_code = form.cleaned_data['country_code']         # Country code (e.g., 'US')
-            country_name = form.country_name                         # Country name (e.g., 'United States')
-            indicator_name = f"{form.indicator_name} - {country_name}"  # Full indicator name with country
-            indicator_code = form.cleaned_data['indicator_code']     # Indicator code (e.g., 'NGDP_R_NSA')
-            frequency = form.cleaned_data['frequency']               # Data frequency ('A' or 'M')
-            start_date = form.cleaned_data['start_date']             # Start date for data range
-            end_date = form.cleaned_data['end_date']                 # End date for data range
-            refresh_data = form.cleaned_data.get('refresh_data', False)  # Whether to bypass cache
+            country_code = form.cleaned_data['country_code']         
+            country_name = form.country_name                        
+            indicator_name = f"{form.indicator_name} - {country_name}"
+            indicator_category = form.cleaned_data['indicator_category']  
+            indicator_code = form.cleaned_data['indicator_code']     
+            frequency = form.cleaned_data['frequency']               
+            #start_date = form.cleaned_data['start_date']             
+            #end_date = form.cleaned_data['end_date']
+            graph_type = form.cleaned_data['graph_type']             
             
             try:
-                # Get data from IMF API with cache settings applied
-                df = IMFData.get_observation(
-                    country_code,             # Country to query 
-                    indicator_code,           # Indicator to query
-                    frequency,                # Frequency of data
-                    start_date,               # Start date filter
-                    end_date,                 # End date filter
-                    bypass_cache=refresh_data # Whether to bypass cache
-                )
+                data = DataCommonsData.get_data_commons_data(country_code, indicator_code, frequency)
                 
-                # Convert values to float and round to 2 decimal places for display
-                df['value'] = df['value'].astype(float).round(2)
+                if data is None:
+                    raise ValueError("No data found for the specified parameters.")
                 
-                # Create a line chart using Plotly Express
-                fig = px.line(
-                    df,                           # DataFrame containing the data
-                    x='date',                     # Column to use for x-axis
-                    y='value',                    # Column to use for y-axis
-                    title=indicator_name          # Chart title
-                )
-                
-                # Configure y-axis format (use .2f format and don't use scientific notation)
-                fig.update_yaxes(tickformat='.2f', exponentformat='none')
-                
-                # Configure the hover template for data points
-                fig.update_traces(hovertemplate='%{y:.2f}')
-                
-                # Convert the Plotly figure to HTML for embedding in the template
-                # full_html=False makes it embed-ready, displayModeBar=False hides the Plotly toolbar
-                graph = fig.to_html(full_html=False, config={'displayModeBar': False})
-                
-                # Prepare context data for the template
-                context = {
-                    'form': form,    # Include the form (will show selected values)
-                    'graph': graph,  # Include the generated graph
-                }
-                
-                # Render the template with the form and graph
-                return render(request, 'imf_data.html', context)
-                
+                else:
+                    
+                    if not isinstance(data, pd.DataFrame):
+                        df = pd.DataFrame(data)
+                    else:
+                        df = data
+                    print(df.head()) 
+                    print(df.columns.tolist())
+
+                    title = f"{indicator_name} - {country_name}"
+
+                    if graph_type == 'line':
+                        fig = px.line(
+                            df, x='date', y='value',
+                            title=title, 
+                            labels={'date': 'Date', 'value': indicator_name}
+                        )
+                    elif graph_type == 'bar':
+                        fig = px.bar(
+                            df, x='date', y='value',
+                            title=title,
+                            labels={'value': indicator_name, 'date': 'Year'}
+                        )
+                    elif graph_type == 'pie':
+                        fig = px.pie(
+                            df, values='value', names='date',
+                            title=title
+                        )
+
+                    fig.update_layout(
+                        template = 'plotly_white',
+                        xaxis_tickformat = '%Y',
+                        yaxis_tickformat = '.2f',
+                        hovermode = 'x unified'
+                    )
+
+                    graph = fig.to_html(full_html=False, include_plotlyjs='cdn')
+
             except ValueError as e:
                 # If any error occurs during data retrieval or processing, capture the error message
                 error_message = str(e)
     else:
         # For GET requests, create a new empty form
-        form = IMFDataForm()
+        form = DataCommonsDataForm()
     
     # Render the template with the form and any error message
     # For GET requests or failed POST requests
-    return render(request, 'imf_data.html', {'form': form, 'error_message': error_message, 'graph': graph})
+    return render(request, 'datacommons_data.html', {'form': form, 'error_message': error_message, 'graph': graph})
 
 
 def export_imf_data_csv(request):
@@ -142,7 +185,6 @@ def export_imf_data_csv(request):
                     frequency, 
                     start_date, 
                     end_date,
-                    bypass_cache=refresh_data
                 )
                 
                 # Create a HTTP response with CSV content type
@@ -509,14 +551,21 @@ def export_imf_data_pdf(request):
     # If the request method is not POST, return an error message
     return HttpResponse("Invalid request method", status=400)
 
+# Add imports at the top if not already present
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import JsonResponse
+import requests
+import pandasdmx as sdmx
+
 @staff_member_required
 def debug_imf_api(request):
     """
-    Admin view to debug IMF API connection issues
-    """
-    if not request.user.is_superuser:
-        return HttpResponse("Unauthorized", status=403)
+    Admin view to debug IMF API connection issues.
+    Only accessible to staff members.
     
+    This view tests multiple API endpoints and connection methods
+    to help diagnose issues with the IMF API.
+    """
     results = {
         'status': 'Running tests...',
         'tests': {}
@@ -551,7 +600,8 @@ def debug_imf_api(request):
     endpoints = [
         'https://sdmxcentral.imf.org/ws/public/sdmxapi/rest',
         'https://sdmxidata.imf.org/sdmx/v2',
-        'https://sdmxidata-test.imf.org/ws/public/sdmxapi/rest'
+        'https://sdmxidata-test.imf.org/ws/public/sdmxapi/rest',
+        'https://api.imf.org/external/sdmx/2.1'  # From IMF documentation
     ]
     
     for endpoint in endpoints:
@@ -560,7 +610,7 @@ def debug_imf_api(request):
                 'status': 'Testing...'
             }
             
-            # Try this endpoint
+            # Try this endpoint with PandaSDMX
             custom_imf = sdmx.Request('IMF', base_url=endpoint)
             flows = custom_imf.dataflow()
             
@@ -577,7 +627,6 @@ def debug_imf_api(request):
             }
     
     # Test with direct requests to see what's happening at HTTP level
-    import requests
     for endpoint in endpoints:
         try:
             results['tests'][f'raw_request_{endpoint}'] = {
@@ -600,22 +649,33 @@ def debug_imf_api(request):
                 'error': str(e)
             }
     
+    # Test IMF API as documented with custom User-Agent
+    try:
+        results['tests']['imf_documented_approach'] = {
+            'status': 'Testing...'
+        }
+        
+        # Create a generic request provider
+        provider = sdmx.Request()
+        provider.source.url = 'https://api.imf.org/external/sdmx/2.1'
+        
+        # Define headers as specified in documentation
+        headers = {'User-Agent': 'idata-script-client'}
+        
+        # Try to get the country codelist
+        response = provider.codelist('CL_AREA_IFS', headers=headers)
+        
+        codelist_ids = [cl.id for cl in response.codelist]
+        results['tests']['imf_documented_approach'] = {
+            'status': 'Success',
+            'codelists': codelist_ids
+        }
+    except Exception as e:
+        results['tests']['imf_documented_approach'] = {
+            'status': 'Failed',
+            'error': str(e)
+        }
+        
     results['status'] = 'Complete'
     return JsonResponse(results)
 
-
-def world_bank_data(request):
-    """
-    View for displaying World Bank data (placeholder for future implementation)
-    """
-    # This is a stub for future implementation of World Bank data functionality
-    # Currently just returns a simple context with placeholder text
-    
-    # Create a context dictionary with placeholder data
-    context = {
-        'data': 'World Bank Data Overview',
-        # Add more context data as needed when implementing this feature
-    }
-    
-    # Render the world_bank_data.html template with the context
-    return render(request, 'world_bank_data.html', context)

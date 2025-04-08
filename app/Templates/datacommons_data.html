@@ -1,0 +1,355 @@
+{% extends 'main_page.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center min-vh-100">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="display-4 text-center">Data Search</h1>
+                <p class="text-center">This page uses currently Data Commons API as a data source. The API gathers the data from multiple different sources, i.e. from World Bank.</p>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h2 class="h2 text-center">Search for data</h2>
+                <form method="post" class="form-horizontal">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{ form.country_code.label_tag }}
+                        {{ form.country_code }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.indicator_category.label_tag }}
+                        {{ form.indicator_category }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.indicator_code.label_tag }}
+                        <div id="indicator-loading" class="small text-secondary mb-1" style="display: none;">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Loading indicators...
+                        </div>
+                        {{ form.indicator_code }}
+                    </div>
+                    <!--
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#searchCollapse" aria-expanded="false" aria-controls="searchCollapse">
+                                Can't find your indicator? Try searching Data Commons
+                            </button>
+                        </div>
+                       
+                        <div class="collapse" id="searchCollapse">
+                            <div class="card-body">
+                                <p class="text-muted small">Data Commons has hundreds of thousands of indicators. Search for specific ones below:</p>
+                                
+                                <div class="input-group mb-3">
+                                    <input type="text" id="dc-search" class="form-control" placeholder="Enter keyword (e.g., inflation, unemployment)">
+                                    <button class="btn btn-outline-secondary" type="button" id="dc-search-button">
+                                        <i class="fas fa-search"></i> Search
+                                    </button>
+                                </div>
+                                
+                                <div id="dc-search-results" class="mt-2" style="max-height: 300px; overflow-y: auto;">
+                                </div>
+                            </div>
+                        </div>   
+                    </div>
+                    -->
+                    <div class="form-group">
+                        {{ form.frequency.label_tag }}
+                        {{ form.frequency }}
+                    </div>
+                    <!--
+                    <div class="form-group">
+                        {{ form.start_date.label_tag }}
+                        {{ form.start_date }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.end_date.label_tag }}
+                        {{ form.end_date }}
+                    </div>
+                    -->
+                    <div class="form-group">
+                        {{ form.graph_type.label_tag }}
+                        {{ form.graph_type }}
+                    </div>
+                    <div class="form-group text-center">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </form>
+                {% if graph %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Data Visualization</h5>
+                    </div>
+                    <div class="card-body">
+                        {{ graph|safe }}
+                    </div>
+                </div> 
+                {% endif %}
+                <!--
+                {% if graph %}
+                <div class="dropdown mt-3">
+                <button class="btn btn-success dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Export Data
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                    <li>
+                        
+                        <form method="post" action="{% url 'export_imf_data_csv' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="country_code" value="{{ form.cleaned_data.country_code }}">
+                            <input type="hidden" name="indicator_code" value="{{ form.cleaned_data.indicator_code }}">
+                            <input type="hidden" name="frequency" value="{{ form.cleaned_data.frequency }}">
+                            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
+                            <input type="hidden" name="end_date" value="{{ form.cleaned_data.end_date|date:'Y-m-d' }}">
+                            <button type="submit" class="dropdown-item">Export to CSV</button>
+                        </form>
+                    </li>
+                    <li>
+                        
+                        <form method="post" action="{% url 'export_imf_data_excel' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="country_code" value="{{ form.cleaned_data.country_code }}">
+                            <input type="hidden" name="indicator_code" value="{{ form.cleaned_data.indicator_code }}">
+                            <input type="hidden" name="frequency" value="{{ form.cleaned_data.frequency }}">
+                            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
+                            <input type="hidden" name="end_date" value="{{ form.cleaned_data.end_date|date:'Y-m-d' }}">
+                            <button type="submit" class="dropdown-item">Export to Excel</button>
+                        </form>
+                    </li>
+                    <li>
+                        
+                        <form method="post" action="{% url 'export_imf_data_image' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="country_code" value="{{ form.cleaned_data.country_code }}">
+                            <input type="hidden" name="indicator_code" value="{{ form.cleaned_data.indicator_code }}">
+                            <input type="hidden" name="frequency" value="{{ form.cleaned_data.frequency }}">
+                            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
+                            <input type="hidden" name="end_date" value="{{ form.cleaned_data.end_date|date:'Y-m-d' }}">
+                            <button type="submit" class="dropdown-item">Export Graph as Image</button>
+                        </form>
+                    </li>
+                    <li>
+                        
+                        <form method="post" action="{% url 'export_imf_data_pdf' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="country_code" value="{{ form.cleaned_data.country_code }}">
+                            <input type="hidden" name="indicator_code" value="{{ form.cleaned_data.indicator_code }}">
+                            <input type="hidden" name="frequency" value="{{ form.cleaned_data.frequency }}">
+                            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
+                            <input type="hidden" name="end_date" value="{{ form.cleaned_data.end_date|date:'Y-m-d' }}">
+                            <button type="submit" class="dropdown-item">Export as PDF Report</button>
+                        </form>
+                    </li>
+                </ul>
+                </div> 
+                {% endif %}
+                -->
+                {% if error_message %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Error:</strong> {{ error_message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endif %}
+                {% if graph %}
+                    <div class="graph">
+                        {{ graph|safe }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const countrySelect = document.getElementById('country_code');
+        const categorySelect = document.getElementById('indicator_category');
+        const indicatorSelect = document.getElementById('indicator_code');
+        const loadingIndicator = document.getElementById('indicator-loading');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        console.log('Elements found:', {
+            countrySelect: countrySelect !== null,
+            categorySelect: categorySelect !== null,
+            indicatorSelect: indicatorSelect !== null,
+            loadingIndicator: loadingIndicator !== null,
+            csrfToken: csrfToken !== null
+        });
+        
+        // Make sure all required elements were found
+        if (!countrySelect || !categorySelect || !indicatorSelect || !loadingIndicator || !csrfToken) {
+            console.error('One or more required elements not found');
+            return;
+        }
+
+        let isRequestPending = flase;
+        let lastRequestParams = null;
+
+        function updateIndicators() {
+            const countryCode = countrySelect.value;
+            const category = categorySelect.value;
+
+            if (!countryCode || !category) return;
+
+            const requestKey = `${countryCode}-${category}`;
+
+            if (requestPending && lastRequestParams === requestKey) {
+                console.log('Skipping duplicate request');
+                return;
+            }
+
+            isRequestPending = true;
+            lastRequestParams = requestKey;
+
+            loadingIndicator.style.display = 'block';
+
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', csrfToken);
+            formData.append('country_code', countryCode);
+            formData.append('indicator_category', category);
+            formData.append('action', 'get_indicators');
+
+            fetch(window.location.href, {
+                method: 'POST', 
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                indicatorSelect.innerHTML = '';
+
+                if (data.success && data.indicators.length > 0) {
+                    data.indicators.forEach(indicator => {
+                        const [value, text] = indicator;
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = text;
+                        indicatorSelect.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No indicators available';
+                    option.disabled = true;
+                    indicatorSelect.appendChild(option);
+                }
+            })
+            .catch(error => {
+                indicatorSelect.innerHTML = '';
+                const option = new Option('Error loading indicators', '');
+                option.disabled = true;
+                indicatorSelect.add(option);
+            })
+            .finally(() => {
+                loadingIndicator.style.display = 'none';
+            });
+        }
+        console.log('Adding event listeners');
+        countrySelect.addEventListener('change', updateIndicators);
+        categorySelect.addEventListener('change', updateIndicators);
+
+        if (countrySelect.value && categorySelect.value) {
+            updateIndicators();
+        }
+    });
+
+    setTimeout(function() {
+        const indicatorSelect = document.getElementById('indicator_code');
+        if (indicatorSelect) {
+            console.log('No indicators, triggering update')
+            updateIndicators();
+        }
+    }, 500);
+
+    /*
+    const dcSearchButton = document.getElementById('dc-search-button');
+    const dcSearchInput = document.getElementById('dc-search');
+    const dcSearchResults = document.getElementById('dc-search-results');
+
+    dcSearchButton.addEventListener('click', searchDataCommons);
+    dcSearchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchDataCommons();
+        }
+    });
+
+    function searchDataCommons() {
+        const searchTerm = dcSearchInput.value.trim();
+        if (!searchTerm) return;
+
+        dcSearchResults.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm text-secondary" role="status"></div> Searching...</div>';
+    
+        const country_code = countrySelect.value;
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', csrfToken);
+        formData.append('country_code', countryCode);
+        formData.append('search_term', searchTerm);
+        formData.append('action', 'search_data_commons');
+
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            dcSearchResults.innerHTML = '';
+            
+            if (data.success && data.indicators.length > 0) {
+                const table = document.createElement('table');
+                table.className = 'table table-sm table-hover';
+
+                const tableHead = document.createElement('table-head');
+                tableHead.innerHTML = `
+                    <tr>
+                        <th>Indicator</th>
+                        <th>Action</th>
+                    </tr>
+                `;	
+                table.appendChild(tableHead);
+
+                const tableBody = document.createElement('table-body');
+                data.indicators.forEach(indicator => {
+                    const [code, name] = indicator;
+                    const row = document.createElement('tr');
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = name;
+                    row.appendChild(nameCell);
+                    
+                    const actionCell = document.createElement('td');
+                    const useButton = document.createElement('button');
+                    useButton.className = 'btn btn-primary btn-sm';
+                    useButton.textContent = 'Use';
+                    useButton.addEventListener('click', function() {
+                        const indicatorSelect = document.getElementById('indicator_code');
+                        indicatorSelect.value = code;
+
+                        const searchCollapse = bootstrap.Collapse.getInstance(document.getElementById('searchCollapse'));
+                        if (searchCollapse) {
+                            searchCollapse.hide();
+                        }     
+                    });
+                    actionCell.appendChild(useButton);
+                    row.appendChild(actionCell);
+                    tableBody.appendChild(row);
+                });
+                table.appendChild(tableBody);
+                dcSearchResults.appendChild(table);
+            } else {
+                dcSearchResults.innerHTML = '<div class="alert alert-info">No indicators found for the search term.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching Indicaors:', error);
+            dcSearchResults.innerHTML = '<div class="alert alert-danger">Error fetching indicators. Please try again.</div>';
+        })
+    }
+    */
+</script>
+{% endblock %}
