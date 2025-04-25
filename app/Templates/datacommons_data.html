@@ -1,4 +1,6 @@
-{% extends 'main_page.html' %}
+{% extends "base.html" %}
+
+{% block title %}Data Commons Search{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-center align-items-center min-vh-100">
@@ -11,7 +13,7 @@
         </div>
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <h2 class="h2 text-center">Search for data</h2>
+                
                 <form method="post" class="form-horizontal">
                     {% csrf_token %}
                     <div class="form-group">
@@ -30,31 +32,6 @@
                         </div>
                         {{ form.indicator_code }}
                     </div>
-                    <!--
-                    <div class="card mb-4">
-                        <div class="card-header bg-light">
-                            <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#searchCollapse" aria-expanded="false" aria-controls="searchCollapse">
-                                Can't find your indicator? Try searching Data Commons
-                            </button>
-                        </div>
-                       
-                        <div class="collapse" id="searchCollapse">
-                            <div class="card-body">
-                                <p class="text-muted small">Data Commons has hundreds of thousands of indicators. Search for specific ones below:</p>
-                                
-                                <div class="input-group mb-3">
-                                    <input type="text" id="dc-search" class="form-control" placeholder="Enter keyword (e.g., inflation, unemployment)">
-                                    <button class="btn btn-outline-secondary" type="button" id="dc-search-button">
-                                        <i class="fas fa-search"></i> Search
-                                    </button>
-                                </div>
-                                
-                                <div id="dc-search-results" class="mt-2" style="max-height: 300px; overflow-y: auto;">
-                                </div>
-                            </div>
-                        </div>   
-                    </div>
-                    -->
                     <div class="form-group">
                         {{ form.frequency.label_tag }}
                         {{ form.frequency }}
@@ -74,7 +51,7 @@
                         {{ form.graph_type }}
                     </div>
                     <div class="form-group text-center">
-                        <button type="submit" class="btn btn-primary">Search</button>
+                        <button type="submit" class="btn btn-primary" style="margin-top: 1%;">Search</button>
                     </div>
                 </form>
                 {% if graph %}
@@ -87,65 +64,7 @@
                     </div>
                 </div> 
                 {% endif %}
-                <!--
-                {% if graph %}
-                <div class="dropdown mt-3">
-                <button class="btn btn-success dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    Export Data
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                    <li>
-                        
-                        <form method="post" action="{% url 'export_imf_data_csv' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="country_code" value="{{ form.cleaned_data.country_code }}">
-                            <input type="hidden" name="indicator_code" value="{{ form.cleaned_data.indicator_code }}">
-                            <input type="hidden" name="frequency" value="{{ form.cleaned_data.frequency }}">
-                            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
-                            <input type="hidden" name="end_date" value="{{ form.cleaned_data.end_date|date:'Y-m-d' }}">
-                            <button type="submit" class="dropdown-item">Export to CSV</button>
-                        </form>
-                    </li>
-                    <li>
-                        
-                        <form method="post" action="{% url 'export_imf_data_excel' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="country_code" value="{{ form.cleaned_data.country_code }}">
-                            <input type="hidden" name="indicator_code" value="{{ form.cleaned_data.indicator_code }}">
-                            <input type="hidden" name="frequency" value="{{ form.cleaned_data.frequency }}">
-                            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
-                            <input type="hidden" name="end_date" value="{{ form.cleaned_data.end_date|date:'Y-m-d' }}">
-                            <button type="submit" class="dropdown-item">Export to Excel</button>
-                        </form>
-                    </li>
-                    <li>
-                        
-                        <form method="post" action="{% url 'export_imf_data_image' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="country_code" value="{{ form.cleaned_data.country_code }}">
-                            <input type="hidden" name="indicator_code" value="{{ form.cleaned_data.indicator_code }}">
-                            <input type="hidden" name="frequency" value="{{ form.cleaned_data.frequency }}">
-                            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
-                            <input type="hidden" name="end_date" value="{{ form.cleaned_data.end_date|date:'Y-m-d' }}">
-                            <button type="submit" class="dropdown-item">Export Graph as Image</button>
-                        </form>
-                    </li>
-                    <li>
-                        
-                        <form method="post" action="{% url 'export_imf_data_pdf' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="country_code" value="{{ form.cleaned_data.country_code }}">
-                            <input type="hidden" name="indicator_code" value="{{ form.cleaned_data.indicator_code }}">
-                            <input type="hidden" name="frequency" value="{{ form.cleaned_data.frequency }}">
-                            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
-                            <input type="hidden" name="end_date" value="{{ form.cleaned_data.end_date|date:'Y-m-d' }}">
-                            <button type="submit" class="dropdown-item">Export as PDF Report</button>
-                        </form>
-                    </li>
-                </ul>
-                </div> 
-                {% endif %}
-                -->
+
                 {% if error_message %}
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <strong>Error:</strong> {{ error_message }}
@@ -161,6 +80,10 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const countrySelect = document.getElementById('country_code');
@@ -183,20 +106,31 @@
             return;
         }
 
-        let isRequestPending = flase;
+        let isRequestPending = false;
         let lastRequestParams = null;
+
+        document.addEventListener('loadIndicators', function() {
+            if (typeof updateIndicators === 'function') {
+                updateIndicators();
+            }
+        });
 
         function updateIndicators() {
             const countryCode = countrySelect.value;
             const category = categorySelect.value;
+            const current = indicatorSelect.value;
 
             if (!countryCode || !category) return;
 
             const requestKey = `${countryCode}-${category}`;
 
-            if (requestPending && lastRequestParams === requestKey) {
+            if (isRequestPending && lastRequestParams === requestKey) {
                 console.log('Skipping duplicate request');
                 return;
+            }
+
+            if (current && current !== 'Amount_EconomicActivity_GrossDomesticProduction_Nominal') {
+                localStorage.setItem('selectedIndicator', current);
             }
 
             isRequestPending = true;
@@ -221,12 +155,20 @@
             .then(data => {
                 indicatorSelect.innerHTML = '';
 
+                const lastSelectedIndicator = localStorage.getItem('selectedIndicator');
+                let matchFound = false;
+
                 if (data.success && data.indicators.length > 0) {
                     data.indicators.forEach(indicator => {
                         const [value, text] = indicator;
                         const option = document.createElement('option');
                         option.value = value;
                         option.textContent = text;
+
+                        if (lastSelectedIndicator && value == lastSelectedIndicator) {
+                            option.selected = true;
+                            matchFound = true;
+                        }
                         indicatorSelect.appendChild(option);
                     });
                 } else {
@@ -245,6 +187,7 @@
             })
             .finally(() => {
                 loadingIndicator.style.display = 'none';
+                isRequestPending = false;
             });
         }
         console.log('Adding event listeners');
@@ -258,9 +201,9 @@
 
     setTimeout(function() {
         const indicatorSelect = document.getElementById('indicator_code');
-        if (indicatorSelect) {
+        if (indicatorSelect && indicatorSelect.options.length <= 1) {
             console.log('No indicators, triggering update')
-            updateIndicators();
+            document.dispatchEvent(new CustomEvent('loadIndicators'))
         }
     }, 500);
 
@@ -353,3 +296,4 @@
     */
 </script>
 {% endblock %}
+

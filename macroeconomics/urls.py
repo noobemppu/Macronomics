@@ -21,9 +21,5 @@ from app import views  # Update this line
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.main_page, name='main_page'),
-    path('data_search/', views.datacommons_data, name='datacommons_data'),
-    path('export-data-csv/', views.export_imf_data_csv, name='export_imf_data_csv'),
-    path('export-data-excel/', views.export_imf_data_excel, name='export_imf_data_excel'),
-    path('export-data-image/', views.export_imf_data_image, name='export_imf_data_image'),
-    path('export-data-pdf/', views.export_imf_data_pdf, name='export_imf_data_pdf'),
+    path('macrodata_search/', views.datacommons_data, name='macrodata_search'),
 ]

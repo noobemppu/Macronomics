@@ -66,9 +66,23 @@ class DataCommonsData(models.Model):
             elif isinstance(series_data, dict):
                 print("Creating df from a dict")
                 records = []
-                for date, value in series_data.items():
-                    records.append({'date': date, 'value': value})
-                
+
+                sample = list(series_data.items())[:3]
+                print(f"dict sample: {sample}")
+                for key, value in series_data.items():
+                    try:
+                        pd.to_datetime(key)
+                        records.append({'date': key, 'value': value})
+
+                    except:
+                        if isinstance(value, dict) and 'date' in value and 'value' in value:
+                            records.append({'date': value['date'], 'value': value['value']})
+                        elif isinstance(value, (int, float)) and key.isdigit():
+                            records.append({'date': key, 'value': value})
+
+                        else:
+                            print('random format from response')
+
                 df = pd.DataFrame(records)
                 df = df.sort_values('date')
                 return df
@@ -120,15 +134,14 @@ def get_indicators(country_code, category=''):
         common_indicators = {
             'EconomicActivity': [
                 ('Amount_EconomicActivity_GrossDomesticProduction_Nominal', 'GDP (Nominal)'),
-                ('GrowthRate_EconomicActivity_GrossDomesticProduction_RealLocalCurrency', 'GDP Growth Rate'),
-                ('Amount_EconomicActivity_GrossDomesticProduction_PerCapita', 'GDP Per Capita'),
-                ('Amount_Consumption_Household', 'Household Consumption'),
-                ('Amount_Investment_Gross', 'Gross Investment'),
-                ('GrowthRate_EconomicActivity_ConsumerPriceIndex', 'Inflation Rate (CPI)'),
-                ('Amount_EconomicActivity_ExportValue', 'Exports'),
-                ('Amount_EconomicActivity_ImportValue', 'Imports'),
-                ('Amount_EconomicActivity_GrossNationalIncome', 'Gross National Income'),
-                ('Amount_EconomicActivity_NetOperatingSurplus', 'Net Operating Surplus')
+                ('GrowthRate_Amount_EconomicActivity_GrossDomesticProduction', 'GDP Growth Rate'),
+                ('Amount_EconomicActivity_GrossDomesticProduction_Nominal_PerCapita', 'Nominal GDP Per Capita'),
+                #('sdg/FP_CPI_TOTL_ZG', 'Annual Inflation Rate (CPI)'),
+                #('InflationAdjustedGDP', 'Inflation Adjusted Gross Domestic Production'),
+                #('sdg/NE_EXP_GNFS_KD_ZG', 'Annual growth of exports of goods and services'),
+                #('sdg/NE_IMP_GNFS_KD_ZG', 'Annual growth of imports of goods and services'),
+                ('Amount_EconomicActivity_GrossNationalIncome_PurchasingPowerParity', 'Gross National Income Based on Purchasing Power Parity'),
+                #('sdg/GC_BAL_CASH_GD_ZS', 'Cash surplus/deficit as a proportion of GDP')
             ],
             'Population': [
                 ('Count_Person', 'Total Population'),
@@ -136,19 +149,11 @@ def get_indicators(country_code, category=''):
                 ('Count_Person_Urban', 'Urban Population'),
                 ('GrowthRate_Count_Person', 'Population Growth Rate'),
                 ('LifeExpectancy_Person', 'Life Expectancy'),
-                ('FertilityRate_Person_Female', 'Fertility Rate'),
-                ('Count_BirthEvent', 'Births'),
-                ('Count_DeathEvent', 'Deaths'),
-                ('Count_MigrantEvent_Immigrant', 'Immigration'),
-                ('Count_MigrantEvent_Emigrant', 'Emigration')
+                ('worldBank/SL_UEM_TOTL_NE_ZS', 'Unemployment, total (% of total labor force) (national estimate)')
             ],
             'Health': [
-                ('Count_MedicalClinic', 'Medical Clinics'),
-                ('Count_MedicalProcedure', 'Medical Procedures'),
                 ('LifeExpectancy_Person', 'Life Expectancy'),
                 ('MortalityRate_Infant', 'Infant Mortality Rate'),
-                ('Count_Death_UnderfiveAge', 'Under-5 Deaths'),
-                ('Percent_Person_WithHealthInsurance', 'Health Insurance Coverage'),
                 ('Count_Hospital', 'Hospitals')
             ],
             'Demographics': [
@@ -183,9 +188,6 @@ def get_indicators(country_code, category=''):
                 ('Median_Earnings_Person_WithEarnings', 'Median Earnings')
             ],
             'Government': [
-                ('Amount_Government_ExpenditureLocal', 'Local Government Expenditure'),
-                ('Amount_Government_ExpenditureState', 'State Government Expenditure'),
-                ('Amount_Government_ExpenditureFederal', 'Federal Government Expenditure'),
                 ('Amount_Government_Revenue', 'Government Revenue'),
                 ('Amount_Government_Expenditure', 'Government Expenditure'),
                 ('Amount_Government_Deficit', 'Government Deficit')
@@ -284,11 +286,11 @@ class DataCommonsDataForm(forms.Form):
     
     # Economic indicator selection dropdown
     indicator_code = forms.ChoiceField(
-        label='Indicator',              # Display label for the field
-        choices=[],                     # Empty initially, populated in __init__
-        widget=forms.Select(attrs={     # Use a select dropdown with custom attributes
-            'id': 'indicator_code',     # HTML id for the field
-            'class': 'form-control'     # Bootstrap styling class
+        label='Indicator',              
+        choices=[],                     
+        widget=forms.Select(attrs={     
+            'id': 'indicator_code',     
+            'class': 'form-control'    
         })
     )
     
@@ -365,6 +367,8 @@ class DataCommonsDataForm(forms.Form):
                 indicator_list =  get_indicators(country_code, category or '')
                 self.fields['indicator_code'].choices = indicator_list
 
+                self.indicator_choices = dict(indicator_list)
+
             except Exception as e:
                 print(f"Error fetching indicators: {e}")
                 
@@ -372,4 +376,4 @@ class DataCommonsDataForm(forms.Form):
         # Set indicator name attribute based on selected indicator code
         if 'indicator_code' in self.data:
             indicator_code = self.data.get('indicator_code')
-            self.indicator_name = self.indicator_choices.get(indicator_code, 'Indicator')
+            self.indicator_name = self.indicator_choices.get(indicator_code, indicator_code)
