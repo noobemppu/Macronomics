@@ -8,14 +8,9 @@ import os
 # Third-party imports
 import pandas as pd
 import datacommons as dc
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.graphics.shapes import Drawing
-from reportlab.graphics.charts.linecharts import HorizontalLineChart
 import plotly.express as px
 import plotly.graph_objects as go
+import yfinance as yf
 
 # Django imports
 from django.shortcuts import render
@@ -23,8 +18,8 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 
 # Local application imports
-from .models import DataCommonsData, DataCommonsDataForm, get_indicators #search_indicators 
-from .cache_config import cache_manager  # This might be needed for your debug_imf_api view
+from .models import DataCommonsData, DataCommonsDataForm, get_indicators  
+from .models_finance import FinanceModel, FinanceDataForm  
 
 def main_page(request):
     """
@@ -152,3 +147,75 @@ def datacommons_data(request):
     # Render the template with the form and any error message
     # For GET requests or failed POST requests
     return render(request, 'datacommons_data.html', {'form': form, 'error_message': error_message, 'graph': graph})
+
+def markets_data(request):
+
+    graph = None
+    error_message = None
+    info_box = None
+
+    if request.method == 'POST':
+        form = FinanceDataForm(request.POST)
+
+        if form.is_valid():
+            ticker = form.cleaned_data['ticker']
+            start_date = form.cleaned_data['start_date']
+            end_date = form.cleaned_data['end_date']
+
+            data = FinanceModel.get_market_data(ticker, start_date, end_date)
+            if data is not None:
+                df = pd.DataFrame(data)
+            
+            if isinstance(data.columns, pd.MultiIndex):
+
+                close_prices = data['Close'][ticker]
+                title = ticker
+
+                fig = px.line(
+                    df, x=close_prices.index, y=close_prices.values,
+                    title=title,
+                    labels={'x': 'Date', 'y': 'Close Price'}
+                )
+                fig.update_layout(
+                    template='plotly_white',
+                    xaxis_tickformat='%Y-%m-%d',
+                    yaxis_tickformat='.2f',
+                    hovermode='x unified'
+                )
+                graph = fig.to_html(
+                    full_html=False,
+                    include_plotlyjs='cdn', 
+                    config={
+                        'displaylogo': False,
+                        'modeBarButtonsToAdd': [
+                            'downloadImage'                       
+                        ]
+                    })
+                
+            basic_info = FinanceModel.get_basic_info(ticker)
+
+            if basic_info is not None:
+                info_box = {
+                    'Name': basic_info.get('longName', 'N/A'),
+                    'Sector': basic_info.get('sector', 'N/A'),
+                    'Industry': basic_info.get('industry', 'N/A'),
+                    'Market_Cap': basic_info.get('marketCap', 'N/A'),
+                    'Beta': basic_info.get('beta', 'N/A'),
+                    '52_Week_High': basic_info.get('fiftyTwoWeekHigh', 'N/A'),
+                    '52_Week_Low': basic_info.get('fiftyTwoWeekLow', 'N/A'),
+                    'Current_Price': basic_info.get('currentPrice', 'N/A'),
+                    'PE_Ratio': basic_info.get('forwardPE', 'N/A'),
+                    'Dividend_Yield': basic_info.get('dividendYield', 'N/A')
+                }
+                print(info_box)
+
+    else:
+        form = FinanceDataForm()
+
+    return render(request, 'markets_search.html', {
+        'form': form, 
+        'error_message': error_message, 
+        'graph': graph, 
+        'info_box': info_box
+    })
+                

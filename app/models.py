@@ -266,17 +266,19 @@ class DataCommonsDataForm(forms.Form):
     ]
 
     # Country selection dropdown
-    country_code = forms.ChoiceField(
-        label='Country',                # Display label for the field
-        choices=country_choices,                          # Empty initially, populated in __init__
-        widget=forms.Select(attrs={     # Use a select dropdown with custom attributes
-            'id': 'country_code',       # HTML id for the field
-            'class': 'form-control'     # Bootstrap styling class
+    country_code = forms.ChoiceField(    
+        label='Country',           
+        label_suffix='',                
+        choices=country_choices,                      
+        widget=forms.Select(attrs={     
+            'id': 'country_code',       
+            'class': 'form-control'    
         })
     )
 
     indicator_category = forms.ChoiceField(
         label='Indicator Category',
+        label_suffix='',
         choices=indicator_categories,
         widget=forms.Select(attrs={
             'id': 'indicator_category',
@@ -286,7 +288,8 @@ class DataCommonsDataForm(forms.Form):
     
     # Economic indicator selection dropdown
     indicator_code = forms.ChoiceField(
-        label='Indicator',              
+        label='Indicator',   
+        label_suffix='',                         
         choices=[],                     
         widget=forms.Select(attrs={     
             'id': 'indicator_code',     
@@ -296,7 +299,8 @@ class DataCommonsDataForm(forms.Form):
     
     # Data frequency selection dropdown
     frequency = forms.ChoiceField(
-        label='Frequency',              
+        label='Frequency',
+        label_suffix='',              
         choices=[   
             ('A', 'annual'),
             ('Q', 'quarterly'),
@@ -331,6 +335,7 @@ class DataCommonsDataForm(forms.Form):
     # Select graph type
     graph_type = forms.ChoiceField(
         label='Graph Type',
+        label_suffix='',
         choices=[
             ('line', 'Line Graph'),
             ('bar', 'Bar Graph'),

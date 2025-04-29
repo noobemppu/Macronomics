@@ -22,4 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.main_page, name='main_page'),
     path('macrodata_search/', views.datacommons_data, name='macrodata_search'),
+    path('markets_search/', views.markets_data, name='markets_search'),
 ]
