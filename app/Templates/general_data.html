@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}General Data{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center min-vh-100">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="display-4 text-center">General Data</h1>
+                <p class="text-center">In this page, you can check some common macroeconomic data from lookup tables.</p>
+                <p class="text-center">Please remember to check the column "Last updated" to know if the data holds the latest information.</p>
+            </div>
+        </div>
+        <div class="row justify-content-center" style="margin-top: 5%; text-align: center;">
+            <h4>Most popular countries</h4>
+            {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+        
+            {% if table_html %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        {{ table_html|safe }}
+                    </div>
+                    <div class="text-muted small mt-3">
+                        Source: International Monetary Fund, World Economic Outlook Database (2024)
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

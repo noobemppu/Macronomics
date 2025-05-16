@@ -17,16 +17,19 @@
                 <form method="POST" action="{% url 'markets_search' %}">
                     {% csrf_token %}
                     <div class="form-group mb-3">
-                        <input type="text" class="form-control" name="ticker" id="id_ticker" placeholder="Enter stock ticker (e.g., AAPL)" required>
+                        <input type="text" class="form-control" name="ticker" id="id_ticker" placeholder="Enter stock ticker (e.g., AAPL)"
+                        value="{{ request.GET.ticker }}" required>
                     </div>
                     <div style="margin-top: 1%;">
-                        <input type="date" class="form-control" name="start_date" id="id_start_date" required>
+                        <input type="date" class="form-control" name="start_date" id="id_start_date"
+                        value="{{ request.GET.start_date }}">
                     </div>
                     <div style="margin-top: 1%;">
-                        <input type="date" class="form-control" name="end_date" id="id_end_date" required>
+                        <input type="date" class="form-control" name="end_date" id="id_end_date"
+                        value="{{ request.GET.end_date }}">
                     </div>
                     <div class="text-center" style="margin-top: 1%;">
-                        <button class="btn btn-primary" type="submit">Search</button>
+                        <button class="btn text-black bg-light" type="submit">Search</button>
                     </div>
                 </form>
             </div>
@@ -39,26 +42,28 @@
         
         {% if graph %}
         <div class="row justify-content-center mt-4">
-            <!-- Main row container -->
             <div class="col-md-12">
-                <!-- Graph and info container -->
                 <div class="row">
-                    <!-- Graph card - takes 8 columns (wider) -->
                     <div class="col-md-8 mb-4">
                         <div class="card h-100">
-                            <div class="card-header bg-primary text-white">
+                            <div class="card-header text-black bg-light">
                                 <h5 class="card-title mb-0">Stock Data Results</h5>
+                                <div class="btn-group" role="group" aria-label="Time period selection">
+                                <!---<a href="{% url 'markets_period' ticker=ticker period='1d' %}" class="btn btn-sm btn-light {% if active_period == '1d' %}active{% endif %}">1D</a> -->
+                                    <a href="{% url 'markets_period' ticker=ticker period='1m' %}" class="btn btn-sm btn-light {% if active_period == '1m' %}active{% endif %}">1M</a>
+                                    <a href="{% url 'markets_period' ticker=ticker period='ytd' %}" class="btn btn-sm btn-light {% if active_period == 'ytd' %}active{% endif %}">YTD</a>
+                                    <a href="{% url 'markets_period' ticker=ticker period='1y' %}" class="btn btn-sm btn-light {% if active_period == '1y' %}active{% endif %}">1Y</a>
+                                    <a href="{% url 'markets_period' ticker=ticker period='all' %}" class="btn btn-sm btn-light {% if active_period == 'all' %}active{% endif %}">Max</a>
+                                </div>
                             </div>
                             <div class="card-body">
                                 {{ graph|safe }}
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Info card - takes 4 columns (narrower) -->
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
-                            <div class="card-header bg-primary text-white">
+                            <div class="card-header text-black bg-light">
                                 <h5 class="card-title mb-0">Basic Info</h5>
                             </div>
                             <div class="card-body">
@@ -76,7 +81,7 @@
                                     <strong>Current Price:</strong> ${{ info_box.Current_Price|floatformat:2|default:"N/A" }}
                                 </div>
                                 <div class="mb-2">
-                                    <strong>Market Cap:</strong> ${{ info_box.Market_Cap|floatformat:0|default:"N/A" }}
+                                    <strong>Market Cap:</strong> ${{ info_box.Market_Cap|default:"N/A" }}
                                 </div>
                                 <div class="mb-2">
                                     <strong>52-Week High:</strong> ${{ info_box.52_Week_High|floatformat:2|default:"N/A" }}
@@ -111,4 +116,47 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cache the chart container
+        const chartContainer = document.querySelector('#chart-container');
+        
+        document.querySelectorAll('.period-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const period = this.dataset.period;
+                const ticker = '{{ ticker }}';
+                
+                chartContainer.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Loading chart data...</p></div>';
+                
+                // Make AJAX request
+                fetch(`/markets_period/${ticker}/${period}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.graph) {
+                            chartContainer.innerHTML = data.graph;
+                        } else {
+                            chartContainer.innerHTML = '<div class="alert alert-warning">No data available</div>';
+                        }
+                        
+                        // Update active button
+                        document.querySelectorAll('.period-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                    })
+                    .catch(error => {
+                        chartContainer.innerHTML = '<div class="alert alert-danger">Error loading chart data</div>';
+                        console.error('Error:', error);
+                    });
+            });
+        });
+    });
+</script>
+
 {% endblock %}

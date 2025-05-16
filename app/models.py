@@ -8,15 +8,8 @@ import datacommons_pandas as dc_pd
 
 class DataCommonsData(models.Model):
     """
-    Django model for handling World Bank data retrieval.
-    This doesn't actually create a database table - it's just a container for methods.
-    
-    Uses PandaSDMX to interact with the World Bank's SDMX API service.
+    Gets data from the Data Commons API.
     """
-    
-    def __str__(self):
-        """Return a string representation of this model"""
-        return "World Bank Data Model"
 
     @staticmethod
     def get_data_commons_data(country_code, indicator_code, frequency):
@@ -45,8 +38,6 @@ class DataCommonsData(models.Model):
                 observation_period = 'P1M' 
             elif frequency == 'D':
                 observation_period = 'P1D' 
-                
-            print(f"Using observation_period: {observation_period}")
 
             series_data = dc.get_stat_series(dcid, stat_var=indicator_code, observation_period=observation_period)
 
@@ -67,8 +58,6 @@ class DataCommonsData(models.Model):
                 print("Creating df from a dict")
                 records = []
 
-                sample = list(series_data.items())[:3]
-                print(f"dict sample: {sample}")
                 for key, value in series_data.items():
                     try:
                         pd.to_datetime(key)
@@ -92,39 +81,6 @@ class DataCommonsData(models.Model):
             print(f"Failed to fetch data from Data Commons: {e}")
             return pd.DataFrame()
 
-"""
-def get_countries(search_term=''):
-
-    # API_KEY = AIzaSyCTI4Xz-UW_G2Q2RfknhcfdAnTHq5X5XuI
-    dcids = {
-        'Afghanistan': 'country/AFG',
-        'Albania': 'country/ALB',
-        'Algeria': 'country/DZA',
-        'Angola': 'country/AGO',
-        'Argentina': 'country/ARG',
-        'Australia': 'country/AUS',
-        'Austria': 'country/AUT',
-        'Germany': 'country/DEU',
-        'United States': 'country/USA',
-        'United Kingdom': 'country/GBR',
-    }
-
-    try:
-        countries = []
-        for code, dcid in dcids.items():
-            
-            country_name_data = dc_pd.get_property_values([dcid], 'name')
-            print(country_name_data)
-            if dcid in country_name_data[dcid]:
-                country_name = country_name_data[dcid][0]
-                print(country_name)
-        return country_name_data
-
-    except Exception as e:
-        print(f"Failed to fetch countries: {e}")
-        country_name_data = []
-        return country_name_data
-"""    
 def get_indicators(country_code, category=''):
     """
     Get a list of indicators for user to choose from.
@@ -142,7 +98,7 @@ def get_indicators(country_code, category=''):
                 #('sdg/NE_IMP_GNFS_KD_ZG', 'Annual growth of imports of goods and services'),
                 ('Amount_EconomicActivity_GrossNationalIncome_PurchasingPowerParity', 'Gross National Income Based on Purchasing Power Parity'),
                 #('sdg/GC_BAL_CASH_GD_ZS', 'Cash surplus/deficit as a proportion of GDP')
-            ],
+            ], 
             'Population': [
                 ('Count_Person', 'Total Population'),
                 ('Count_Person_Rural', 'Rural Population'),
@@ -151,20 +107,14 @@ def get_indicators(country_code, category=''):
                 ('LifeExpectancy_Person', 'Life Expectancy'),
                 ('worldBank/SL_UEM_TOTL_NE_ZS', 'Unemployment, total (% of total labor force) (national estimate)')
             ],
-            'Health': [
-                ('LifeExpectancy_Person', 'Life Expectancy'),
-                ('MortalityRate_Infant', 'Infant Mortality Rate'),
-                ('Count_Hospital', 'Hospitals')
-            ],
             'Demographics': [
                 ('Count_Person_Female', 'Female Population'),
-                ('Count_Person_Male', 'Male Population'),
-                ('Count_Person_BelowPovertyLevelInThePast12Months', 'People Below Poverty Line'),
-                ('Median_Age_Person', 'Median Age'),
-                ('Percent_Person_65OrMoreYears', 'Population 65 Years and Over'),
-                ('Count_HousingUnit', 'Housing Units'),
-                ('Median_Income_Household', 'Median Household Income')
-            ],
+                ('Count_Person_Male', 'Male Population')
+            ]
+        }
+        
+        """
+        IN TEST
             'Debt': [
                 ('Amount_Debt_Government', 'Government Debt'),
                 ('Amount_Debt_Government_PerCapita', 'Government Debt Per Capita'),
@@ -207,7 +157,7 @@ def get_indicators(country_code, category=''):
                 ('Percent_ExportValue_GDP', 'Exports to GDP'),
                 ('Percent_ImportValue_GDP', 'Imports to GDP')
             ]
-        }
+        """
         indicators = []
 
         if category in common_indicators:
@@ -221,23 +171,6 @@ def get_indicators(country_code, category=''):
         indicators = []
         return indicators
 
-"""
-def search_indicators(country_code, search_term):
-
-    matching_indicators = []
-
-    dc_search_url = f"https://datacommons.org/tools/statvar?q={search_term}"
-    
-    search_results = requests.get(dc_search_url).json()
-    if search_results:
-        matching_indicators.append(search_results)
-
-    else:
-        search_results = dc.get_available_stats(country_code)
-        
-    return matching_indicators
-
-"""
 
 
 class DataCommonsDataForm(forms.Form):
@@ -260,9 +193,7 @@ class DataCommonsDataForm(forms.Form):
     ]
 
     indicator_categories = [
-        'EconomicActivity', 'Population', 'Health', 'Demographics', 
-        'Debt', 'Employment', 'Income',
-        'Poverty', 'Government', 'Finance', 'Trade'
+        'EconomicActivity', 'Population', 'Demographics'
     ]
 
     # Country selection dropdown
@@ -303,9 +234,7 @@ class DataCommonsDataForm(forms.Form):
         label_suffix='',              
         choices=[   
             ('A', 'annual'),
-            ('Q', 'quarterly'),
-            ('M', 'monthly'),
-            ('D', 'daily')
+            ('Q', 'quarterly')
         ],    
         widget=forms.Select(attrs={     
             'class': 'form-control'     
@@ -348,10 +277,7 @@ class DataCommonsDataForm(forms.Form):
     
 
     def __init__(self, *args, **kwargs):
-        """
-        Initialize the form and populate dynamic choice fields.
-        This method runs when creating a new form instance.
-        """
+
         # Call the parent class __init__ method
         super(DataCommonsDataForm, self).__init__(*args, **kwargs)
         

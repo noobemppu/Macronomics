@@ -9,6 +9,7 @@
             <div class="col-md-8">
                 <h1 class="display-4 text-center">Data Search</h1>
                 <p class="text-center">This page uses currently Data Commons API as a data source. The API gathers the data from multiple different sources, i.e. from World Bank.</p>
+                <p class="text-center">(Currently still in test, all indicators won't work for all of the countries)</p>
             </div>
         </div>
         <div class="row justify-content-center">
@@ -206,94 +207,7 @@
             document.dispatchEvent(new CustomEvent('loadIndicators'))
         }
     }, 500);
-
-    /*
-    const dcSearchButton = document.getElementById('dc-search-button');
-    const dcSearchInput = document.getElementById('dc-search');
-    const dcSearchResults = document.getElementById('dc-search-results');
-
-    dcSearchButton.addEventListener('click', searchDataCommons);
-    dcSearchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            searchDataCommons();
-        }
-    });
-
-    function searchDataCommons() {
-        const searchTerm = dcSearchInput.value.trim();
-        if (!searchTerm) return;
-
-        dcSearchResults.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm text-secondary" role="status"></div> Searching...</div>';
     
-        const country_code = countrySelect.value;
-        const formData = new FormData();
-        formData.append('csrfmiddlewaretoken', csrfToken);
-        formData.append('country_code', countryCode);
-        formData.append('search_term', searchTerm);
-        formData.append('action', 'search_data_commons');
-
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            dcSearchResults.innerHTML = '';
-            
-            if (data.success && data.indicators.length > 0) {
-                const table = document.createElement('table');
-                table.className = 'table table-sm table-hover';
-
-                const tableHead = document.createElement('table-head');
-                tableHead.innerHTML = `
-                    <tr>
-                        <th>Indicator</th>
-                        <th>Action</th>
-                    </tr>
-                `;	
-                table.appendChild(tableHead);
-
-                const tableBody = document.createElement('table-body');
-                data.indicators.forEach(indicator => {
-                    const [code, name] = indicator;
-                    const row = document.createElement('tr');
-                    const nameCell = document.createElement('td');
-                    nameCell.textContent = name;
-                    row.appendChild(nameCell);
-                    
-                    const actionCell = document.createElement('td');
-                    const useButton = document.createElement('button');
-                    useButton.className = 'btn btn-primary btn-sm';
-                    useButton.textContent = 'Use';
-                    useButton.addEventListener('click', function() {
-                        const indicatorSelect = document.getElementById('indicator_code');
-                        indicatorSelect.value = code;
-
-                        const searchCollapse = bootstrap.Collapse.getInstance(document.getElementById('searchCollapse'));
-                        if (searchCollapse) {
-                            searchCollapse.hide();
-                        }     
-                    });
-                    actionCell.appendChild(useButton);
-                    row.appendChild(actionCell);
-                    tableBody.appendChild(row);
-                });
-                table.appendChild(tableBody);
-                dcSearchResults.appendChild(table);
-            } else {
-                dcSearchResults.innerHTML = '<div class="alert alert-info">No indicators found for the search term.</div>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching Indicaors:', error);
-            dcSearchResults.innerHTML = '<div class="alert alert-danger">Error fetching indicators. Please try again.</div>';
-        })
-    }
-    */
 </script>
 {% endblock %}
 

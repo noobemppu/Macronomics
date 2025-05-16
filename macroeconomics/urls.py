@@ -23,4 +23,7 @@ urlpatterns = [
     path('', views.main_page, name='main_page'),
     path('macrodata_search/', views.datacommons_data, name='macrodata_search'),
     path('markets_search/', views.markets_data, name='markets_search'),
+    path('markets_results/', views.markets_results, name='markets_results'),
+    path('markets_period/<str:ticker>/<str:period>/', views.markets_period, name='markets_period'),
+    path('general_data/', views.gd_popular_countries_data, name='general_data'),
 ]
