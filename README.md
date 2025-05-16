@@ -8,7 +8,7 @@ Macronomics on talous- ja rahoitusmarkkinoiden dataan ja sen visualisointiin kes
  
  - IMF: Maailman Valuuttarahasto tarjoaa heidän APIn (juuri uudistettu) kautta pääsyn heidän omaan tietokantaansa, josta löytyy kattavasti historiallista talousdataa lähes kaikista maailman maista.
 
-Olen kehittänyt Marconomicsia tähän mennessä lokaalisti, koska tarkoitukseni on saada API:t ja datavisualisaation perustoiminnot käyttöön, ennenkuin lähden pystyttämään pilviympäristöä. Nyt kuitenkin perustoiminnallisuudet toimivat (vaikka kehityskohteita on vielä huomattavasti!), joten seuraavaksi pääsen vihdoinkin siirtämään sovellusta pilveen (AWS). Tarkoitukseni on hyödyntää eri AWS:n palveluita mahdollisimman kattavasti, tässä esimerkkejä (ei kuitenkaan koko arkkitehtuuri) tämän hetkisistä suunnitelmista:
+Olen kehittänyt Marconomicsia tähän mennessä lokaalisti, koska tarkoitukseni on saada API:t ja datavisualisaation perustoiminnot käyttöön, ennen kuin lähden pystyttämään pilviympäristöä. Nyt kuitenkin perustoiminnallisuudet toimivat (vaikka kehityskohteita on vielä huomattavasti!), joten seuraavaksi pääsen vihdoinkin siirtämään sovellusta pilveen (AWS). Tarkoitukseni on hyödyntää eri AWS:n palveluita mahdollisimman kattavasti, tässä esimerkkejä (ei kuitenkaan koko arkkitehtuuri) tämän hetkisistä suunnitelmista:
 
  - käyttää Route53:sta DNS-palveluna
  - hyödyntää Lambdaa ja API Gateway:ta käyttäjän tekemissä API-kutsuissa.
@@ -17,7 +17,7 @@ Olen kehittänyt Marconomicsia tähän mennessä lokaalisti, koska tarkoitukseni
  - käyttää Lambdaa + SQS + SES käyttäjien datan lähettämiseen heidän sähköposteihinsa.
  - käyttää Cognitoa käyttäjien autentikaatioon.
 
-Haluan huomauttaa (ja kuten koodistakin näkyy), nettisivujen kehitys on vielä kesken ja lisäominaisuuksia on tulossa tulevaisuudessa. Näitä ovat mm.:
+Haluan huomauttaa (ja kuten koodistakin näkyy), että nettisivujen kehitys on vielä kesken ja lisäominaisuuksia on tulossa tulevaisuudessa. Näitä ovat mm.:
 
   - Kattava portfolio-työkalu, joka sisältää mm. työkaluja ja dataa riskitason arviointiin ja korrelaatiolaskurin eri omaisuusluokkien välille.
   - Uutisvirta yhdistettynä uutista koskevaan dataan (esim. etsin USA:n inflaatio-dataa, joten datan lisäksi nettisivu näyttää viimeisimpiä inflaatioon liittyviä uutisia)
