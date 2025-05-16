@@ -26,5 +26,5 @@ Haluan huomauttaa (ja kuten koodistakin näkyy), että nettisivujen kehitys on v
 
 Myös nettisivujen ulkoasu on vielä hyvin yksinkertainen ja pyrin parantamaan sitä jatkuvasti.
 
-Keskutelen mielelläni lisää projektin kehityksestä ja teknologisista ratkaisuista! Tämä esittely kuvastaa tämän hetken suunnitelmaa ja mahdollisia muutoksia todennäköisesti tulee.
+Keskutelen mielelläni lisää projektin kehityksestä ja teknologisista ratkaisuista! Tämä esittely kuvastaa tämän hetken suunnitelmaa ja mahdollisia muutoksia todennäköisesti tulee tulevaisuudessa.
    
