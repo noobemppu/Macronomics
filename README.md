@@ -4,9 +4,9 @@ Macronomics on talous- ja rahoitusmarkkinoiden dataan ja sen visualisointiin kes
 
  - Data Commons: Googlen alusta, joka tarjoaa paljon erilaista yhteiskuntaan, talouteen ja väestöön liittyvää dataa. Data Commons kerää datansa monista eri julkisista tietokannoista ja tarjoaa sitä eteenpäin, tarjoten samalla paljon eri toiminnallisuuksia datan käyttäjille ja ohjelmistokehittäjille.
  
- - Alpha Vantage: Tarjoaa kattavasti dataa mm. osake-, valuutta-, ja optiomarkkinoilta. Lisäksi heidän APinsa tarjoaa myös globaalin uutistarjonnan.
+ - Alpha Vantage: Tarjoaa kattavasti dataa mm. osake-, valuutta-, ja optiomarkkinoilta. Lisäksi heidän APInsa tarjoaa myös globaalin uutistarjonnan.
  
- - IMF: Maailman Valuuttarahasto tarjoaa heidän APIn (juuri uudistettu) kautta pääsy heidän omaan tietokantaansa, josta löytyy kattavasti historiallista talousdataa lähes kaikista maailman maista.
+ - IMF: Maailman Valuuttarahasto tarjoaa heidän APIn (juuri uudistettu) kautta pääsyn heidän omaan tietokantaansa, josta löytyy kattavasti historiallista talousdataa lähes kaikista maailman maista.
 
 Olen kehittänyt Marconomicsia tähän mennessä lokaalisti, koska tarkoitukseni on saada API:t ja datavisualisaation perustoiminnot käyttöön, ennenkuin lähden pystyttämään pilviympäristöä. Nyt kuitenkin perustoiminnallisuudet toimivat (vaikka kehityskohteita on vielä huomattavasti!), joten seuraavaksi pääsen vihdoinkin siirtämään sovellusta pilveen (AWS). Tarkoitukseni on hyödyntää eri AWS:n palveluita mahdollisimman kattavasti, tässä esimerkkejä (ei kuitenkaan koko arkkitehtuuri) tämän hetkisistä suunnitelmista:
 
